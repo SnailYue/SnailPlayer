@@ -18,6 +18,11 @@ android {
         ndk {
             abiFilters 'armeabi-v7a'
         }
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++11"
+            }
+        }
     }
 
     buildTypes {
