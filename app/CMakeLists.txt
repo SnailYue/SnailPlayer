@@ -56,7 +56,11 @@ set_target_properties(swscale-4
         ${lib_src_DIR}/libswscale-4.so)
 
 add_library(native-lib SHARED
-        ${CMAKE_SOURCE_DIR}/src/main/cpp/native-lib.cpp)
+        ${CMAKE_SOURCE_DIR}/src/main/cpp/native-lib.cpp
+        ${CMAKE_SOURCE_DIR}/src/main/cpp/native_window_render.cpp
+        ${CMAKE_SOURCE_DIR}/src/main/cpp/log_util.cpp
+        ${CMAKE_SOURCE_DIR}/src/main/cpp/opensles_render.cpp
+        )
 
 target_link_libraries(native-lib
         avcodec-57
