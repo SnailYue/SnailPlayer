@@ -139,8 +139,9 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
     /**
      * configure input audio source
      */
-    SLDataLocator_AndroidSimpleBufferQueue locatorAndroidSimpleBufferQueue = {
+    SLDataLocator_AndroidSimpleBufferQueue locatorAndroidSimpleBufferQueue = {   //缓冲队列定位器
             SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
+    //数据格式 pcm格式，单声道，采样率8khz，采样大小16bit，容器大小16bit，前中扩音，尾序
     SLDataFormat_PCM formatPcm = {SL_DATAFORMAT_PCM, 1, SL_SAMPLINGRATE_8,
                                   SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
                                   SL_SPEAKER_FRONT_CENTER, SL_BYTEORDER_BIGENDIAN};
@@ -168,6 +169,7 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
      * Data sink
      */
     SLDataSink audioSink = {&locatorOutputMix, NULL};
+    //缓冲队列，功能音量，功能音效
     const SLInterfaceID slInterfaceId[3] = {SL_IID_BUFFERQUEUE, SL_IID_VOLUME, SL_IID_EFFECTSEND};
     const SLboolean slInterfaceRequired[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
     /**
@@ -187,7 +189,7 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
     assert(SL_RESULT_SUCCESS == result);
     (void) result;
     /**
-     * get play interface
+     * get play interface 获取播放接口
      */
     result = (*bufferQueuePlayerObject)->GetInterface(bufferQueuePlayerObject, SL_IID_PLAY,
                                                       &bufferQueuePlayerPlay);
@@ -195,7 +197,7 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
     (void) result;
 
     /**
-     * get buffer queue interface
+     * get buffer queue interface 获取缓冲区接口
      */
     result = (*bufferQueuePlayerObject)->GetInterface(bufferQueuePlayerObject, SL_IID_BUFFERQUEUE,
                                                       &bufferQueuePlayerBufferQueue);
@@ -203,7 +205,7 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
     (void) result;
 
     /**
-     * register callback on the buffer queue
+     * register callback on the buffer queue  注册缓冲区的回调
      */
     result = (*bufferQueuePlayerBufferQueue)->RegisterCallback(bufferQueuePlayerBufferQueue,
                                                                bufferQueuePlayerCallback, NULL);
@@ -211,7 +213,7 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
     (void) result;
 
     /**
-     * get the effect send interfae
+     * get the effect send interfae  获取音效接口
      */
     bufferQueuePlayerEffectSend = NULL;
     if (0 == bufferQueueSampleRate) {
@@ -227,7 +229,7 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
     (void)result;
 #endif
     /**
-     * get volume interface
+     * get volume interface  获取音量接口
      */
     result = (*bufferQueuePlayerObject)->GetInterface(bufferQueuePlayerObject, SL_IID_VOLUME,
                                                       &bufferQueuePlayerVolume);
@@ -246,7 +248,7 @@ void initAudioPlayer(int sampleRate, int channel, AudioDataProvider *p) {
 void startAudioPlay() {
     ILOG("startAudioPlay")
     /**
-     * set play state to playing
+     * set play state to playing  将播放状态改成正在播放
      */
     SLresult result = (*bufferQueuePlayerPlay)->SetPlayState(bufferQueuePlayerPlay,
                                                              SL_PLAYSTATE_PLAYING);
@@ -258,7 +260,7 @@ void startAudioPlay() {
 void stopAudioPlay() {
     ILOG("stopAudioPlay")
     /**
-     * set play state to paused
+     * set play state to paused  将播放状态改成暂停
      */
     SLresult result = (*bufferQueuePlayerPlay)->SetPlayState(bufferQueuePlayerPlay,
                                                              SL_PLAYSTATE_PAUSED);
