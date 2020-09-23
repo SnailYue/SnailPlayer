@@ -19,6 +19,7 @@ VideoDataProvider *videoDataProvider = nullptr;
  */
 void initVideoRender(JNIEnv *env, VideoDataProvider *provider, jobject surface) {
     videoDataProvider = provider;
+    //获取surface
     nativeWindow = ANativeWindow_fromSurface(env, surface);
 }
 
@@ -30,6 +31,7 @@ void videoRender() {
         ELOG("Video render not init")
         return;
     }
+    //设置nativewindow绘制窗口的属性   nativeWindow指针，图像宽，图像高，像素的内存格式
     if (0 > ANativeWindow_setBuffersGeometry(nativeWindow, videoDataProvider->GetVideoWidth(),
                                              videoDataProvider->GetVideoHeight(),
                                              WINDOW_FORMAT_RGBA_8888)) {
@@ -37,21 +39,31 @@ void videoRender() {
         return;
     }
     while (true) {
+        //获取buffer绘制缓冲区
         if (ANativeWindow_lock(nativeWindow, &windowBuffer, nullptr) < 0) {
             ELOG("Could not lock window")
         } else {
+            //填充图像数据到buffer绘制缓冲区中
             uint8_t *buffer = nullptr;
             AVFrame *frame = nullptr;
             int width, height;
+            //获取视频数据
             videoDataProvider->GetData(&buffer, &frame, width, height);
             if (buffer == nullptr) {
                 break;
             }
+            //数据位
             uint8_t *dst = (uint8_t *) windowBuffer.bits;
+            /**
+             * 一行一次拷贝   windowBuffer.stride * 4 每行的数据个数 * 4 表示RGBA数据个数
+             * dst + i * windowBuffer.stride * 4 拷贝的目标地址
+             * buffer + i * frame->linesize[0] 拷贝源地址
+             */
             for (int i = 0; i < height; ++i) {
                 memcpy(dst + i * windowBuffer.stride * 4, buffer + i * frame->linesize[0],
                        frame->linesize[0]);
             }
+            //启动绘制
             ANativeWindow_unlockAndPost(nativeWindow);
         }
     }
