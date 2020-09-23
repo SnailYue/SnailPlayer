@@ -3,6 +3,7 @@
 //
 
 #include "opensles_render.h"
+#include "log_util.h"
 
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
@@ -13,25 +14,25 @@
 /**
  * object & interface
  */
-SLObjectItf engineObject;
-SLEngineItf engineEngine;
+SLObjectItf engineObject; //引擎对象
+SLEngineItf engineEngine; //引擎接口
 
 /**
  * output mix interface
  */
-SLObjectItf outputMixObject;
-SLEnvironmentalReverbItf outputMixEnvironmentalReverb = NULL;
+SLObjectItf outputMixObject; //混音器对象
+SLEnvironmentalReverbItf outputMixEnvironmentalReverb = NULL; //具体的混音器实例对象
 
 /**
  * buffer queue player interface
  */
-SLObjectItf bufferQueuePlayerObject;
-SLPlayItf bufferQueuePlayerPlay;
-SLAndroidSimpleBufferQueueItf bufferQueuePlayerBufferQueue;
-SLEffectSendItf bufferQueuePlayerEffectSend;
-SLMuteSoloItf bufferQueuePlayerMuteSolo;
-SLVolumeItf bufferQueuePlayerVolume;
-SLmilliHertz bufferQueueSampleRate = 0;
+SLObjectItf bufferQueuePlayerObject;  //播放器接口对象
+SLPlayItf bufferQueuePlayerPlay;  //具体播放器实例对象
+SLAndroidSimpleBufferQueueItf bufferQueuePlayerBufferQueue;  //播放器的缓冲队列接口
+SLEffectSendItf bufferQueuePlayerEffectSend;  //音效发送接口
+SLMuteSoloItf bufferQueuePlayerMuteSolo;  //声道接口
+SLVolumeItf bufferQueuePlayerVolume;  // 音量接口
+SLmilliHertz bufferQueueSampleRate = 0; //采样率
 
 pthread_mutex_t audioEngineLock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -41,6 +42,7 @@ const SLEnvironmentalReverbSettings reverbSettings = SL_I3DL2_ENVIRONMENT_PRESET
 AudioDataProvider *audioDataProvider;
 
 void bufferQueuePlayerCallback(SLAndroidSimpleBufferQueueItf bufferQueue, void *context) {
+    ILOG("bufferQueuePlayerCallback")
     assert(bufferQueue == bufferQueuePlayerBufferQueue);
     if (audioDataProvider != NULL) {
         uint8_t *buffer;
@@ -67,6 +69,7 @@ void bufferQueuePlayerCallback(SLAndroidSimpleBufferQueueItf bufferQueue, void *
  * 创建音频播放的引擎
  */
 void createAudioEngine() {
+    ILOG("createAudioEngine")
     SLresult result;
 
     /**
@@ -93,10 +96,10 @@ void createAudioEngine() {
     /**
      * create output mix
      */
-    const SLInterfaceID slInterfaceId[1] = {SL_IID_ENVIRONMENTALREVERB};
-    const SLboolean req[1] = {SL_BOOLEAN_FALSE};
+    const SLInterfaceID slInterfaceId[1] = {SL_IID_ENVIRONMENTALREVERB};  //环境混响音效
+    const SLboolean slInterfaceRequired[1] = {SL_BOOLEAN_FALSE};  //混响音效是否必需
     result = (*engineEngine)->CreateOutputMix(engineEngine, &outputMixObject, 1, slInterfaceId,
-                                              req);
+                                              slInterfaceRequired);
     assert(SL_RESULT_SUCCESS == result);
     (void) result;
     /**
@@ -127,6 +130,7 @@ void createAudioEngine() {
  * @param channel
  */
 void createBufferQueueAudioPlayer(int sampleRate, int channel) {
+    ILOG("createBufferQueueAudioPlayer")
     SLresult result;
     if (sampleRate >= 0) {
         bufferQueueSampleRate = sampleRate * 1000;
@@ -165,13 +169,14 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
      */
     SLDataSink audioSink = {&locatorOutputMix, NULL};
     const SLInterfaceID slInterfaceId[3] = {SL_IID_BUFFERQUEUE, SL_IID_VOLUME, SL_IID_EFFECTSEND};
-    const SLboolean req[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+    const SLboolean slInterfaceRequired[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
     /**
      * create audio player
      */
     result = (*engineEngine)->CreateAudioPlayer(engineEngine, &bufferQueuePlayerObject,
                                                 &audioSource, &audioSink,
-                                                bufferQueueSampleRate ? 2 : 3, slInterfaceId, req);
+                                                bufferQueueSampleRate ? 2 : 3, slInterfaceId,
+                                                slInterfaceRequired);
     assert(SL_RESULT_SUCCESS == result);
     (void) result;
 
@@ -232,12 +237,14 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
 
 
 void initAudioPlayer(int sampleRate, int channel, AudioDataProvider *p) {
+    ILOG("initAudioPlayer")
     audioDataProvider = p;
     createAudioEngine();
     createBufferQueueAudioPlayer(sampleRate, channel);
 }
 
 void startAudioPlay() {
+    ILOG("startAudioPlay")
     /**
      * set play state to playing
      */
@@ -249,6 +256,7 @@ void startAudioPlay() {
 }
 
 void stopAudioPlay() {
+    ILOG("stopAudioPlay")
     /**
      * set play state to paused
      */
