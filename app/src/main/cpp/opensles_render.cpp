@@ -37,7 +37,6 @@ pthread_mutex_t audioEngineLock = PTHREAD_MUTEX_INITIALIZER;
 
 const SLEnvironmentalReverbSettings reverbSettings = SL_I3DL2_ENVIRONMENT_PRESET_STONECORRIDOR;
 
-const int outputBufferSize = 8196;
 
 AudioDataProvider *audioDataProvider;
 
@@ -107,11 +106,14 @@ void createAudioEngine() {
     assert(SL_RESULT_SUCCESS == result);
     (void) result;
     /**
-     * get environmental reverb interface
+     * get environmentalreverb interface
      */
     result = (*outputMixObject)->GetInterface(outputMixObject, SL_IID_ENVIRONMENTALREVERB,
                                               &outputMixEnvironmentalReverb);
     if (SL_RESULT_SUCCESS == result) {
+        /**
+         * set output mix environmentalreverb properties
+         */
         result = (*outputMixEnvironmentalReverb)->SetEnvironmentalReverbProperties(
                 outputMixEnvironmentalReverb, &reverbSettings);
         (void) result;
@@ -138,10 +140,15 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
     SLDataFormat_PCM formatPcm = {SL_DATAFORMAT_PCM, 1, SL_SAMPLINGRATE_8,
                                   SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
                                   SL_SPEAKER_FRONT_CENTER, SL_BYTEORDER_BIGENDIAN};
-
+    /**
+     * set bufferqueue sample rate
+     */
     if (bufferQueueSampleRate) {
         formatPcm.samplesPerSec = bufferQueueSampleRate;
     }
+    /**
+     * set bufferqueue channels
+     */
     formatPcm.numChannels = (SLuint32) channel;
     if (channel == 2) {
         formatPcm.channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
