@@ -1,8 +1,12 @@
 #include <jni.h>
+#include "snail_player.h"
 
 //
 // Created by surface on 9/21/2020.
 //
+
+SnailPlayer *player = new SnailPlayer();
+PlayerEventCallback *eventCallback;
 
 /**
  * 设置回调
@@ -12,7 +16,11 @@ JNIEXPORT void JNICALL
 Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1setEventCallback(JNIEnv *env,
                                                                                jobject thiz,
                                                                                jobject callback) {
-
+    if (eventCallback) {
+        delete eventCallback;
+    }
+    eventCallback = new PlayerEventCallback(env, callback);
+    player->SetEventCallback(eventCallback);
 }
 
 /**
@@ -23,7 +31,7 @@ JNIEXPORT void JNICALL
 Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1setDataSource(JNIEnv *env,
                                                                             jobject thiz,
                                                                             jstring url) {
-
+    player->SetDataSource(env->GetStringUTFChars(url, NULL));
 }
 
 /**
@@ -33,7 +41,7 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1prepareAsync(JNIEnv *env,
                                                                            jobject thiz) {
-
+    player->PrepareAsync();
 }
 
 /**
@@ -42,7 +50,7 @@ Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1prepareAsync(JNIEn
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1start(JNIEnv *env, jobject thiz) {
-
+    player->Start();
 }
 
 /**
@@ -51,7 +59,7 @@ Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1start(JNIEnv *env,
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1pause(JNIEnv *env, jobject thiz) {
-
+    player->Pause();
 }
 
 /**
@@ -61,7 +69,7 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1setSurface(JNIEnv *env, jobject thiz,
                                                                          jobject surface) {
-
+    initVideoRender(env, player, surface);
 }
 
 /**
@@ -71,7 +79,7 @@ extern "C"
 JNIEXPORT jint JNICALL
 Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1getVideoHeight(JNIEnv *env,
                                                                              jobject thiz) {
-
+    return player->GetVideoHeight();
 }
 
 /**
@@ -81,6 +89,6 @@ extern "C"
 JNIEXPORT jint JNICALL
 Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1getVideoWidth(JNIEnv *env,
                                                                             jobject thiz) {
-
+    return player->GetVideoWidth();
 }
 
