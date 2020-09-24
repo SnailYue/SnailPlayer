@@ -32,7 +32,7 @@ SLAndroidSimpleBufferQueueItf bufferQueuePlayerBufferQueue;  //播放器的缓�
 SLEffectSendItf bufferQueuePlayerEffectSend;  //音效发送接口
 SLMuteSoloItf bufferQueuePlayerMuteSolo;  //声道接口
 SLVolumeItf bufferQueuePlayerVolume;  // 音量接口
-SLmilliHertz bufferQueueSampleRate = 0; //采样率
+SLmilliHertz bufferQueuePlayerSampleRate = 0; //采样率
 
 pthread_mutex_t audioEngineLock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -48,7 +48,7 @@ void bufferQueuePlayerCallback(SLAndroidSimpleBufferQueueItf bufferQueue, void *
         uint8_t *buffer;
         int size;
         audioDataProvider->GetData(&buffer, size);
-        if (buffer != NULL && 0 != size) {
+        if (NULL != buffer && 0 != size) {
             SLresult result;
             /**
              * enqueue another buffer
@@ -133,7 +133,7 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
     ILOG("createBufferQueueAudioPlayer")
     SLresult result;
     if (sampleRate >= 0) {
-        bufferQueueSampleRate = sampleRate * 1000;
+        bufferQueuePlayerSampleRate = sampleRate * 1000;
     }
 
     /**
@@ -144,12 +144,12 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
     //数据格式 pcm格式，单声道，采样率8khz，采样大小16bit，容器大小16bit，前中扩音，尾序
     SLDataFormat_PCM formatPcm = {SL_DATAFORMAT_PCM, 1, SL_SAMPLINGRATE_8,
                                   SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
-                                  SL_SPEAKER_FRONT_CENTER, SL_BYTEORDER_BIGENDIAN};
+                                  SL_SPEAKER_FRONT_CENTER, SL_BYTEORDER_LITTLEENDIAN};
     /**
      * set bufferqueue sample rate
      */
-    if (bufferQueueSampleRate) {
-        formatPcm.samplesPerSec = bufferQueueSampleRate;
+    if (bufferQueuePlayerSampleRate) {
+        formatPcm.samplesPerSec = bufferQueuePlayerSampleRate;
     }
     /**
      * set bufferqueue channels
@@ -177,7 +177,7 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
      */
     result = (*engineEngine)->CreateAudioPlayer(engineEngine, &bufferQueuePlayerObject,
                                                 &audioSource, &audioSink,
-                                                bufferQueueSampleRate ? 2 : 3, slInterfaceId,
+                                                bufferQueuePlayerSampleRate ? 2 : 3, slInterfaceId,
                                                 slInterfaceRequired);
     assert(SL_RESULT_SUCCESS == result);
     (void) result;
@@ -216,18 +216,18 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
      * get the effect send interfae  获取音效接口
      */
     bufferQueuePlayerEffectSend = NULL;
-    if (0 == bufferQueueSampleRate) {
+    if (0 == bufferQueuePlayerSampleRate) {
         result = (*bufferQueuePlayerObject)->GetInterface(bufferQueuePlayerObject,
                                                           SL_IID_EFFECTSEND,
                                                           &bufferQueuePlayerEffectSend);
         assert(SL_RESULT_SUCCESS == result);
         (void) result;
     }
-#if 0
-    result = (*bufferQueuePlayerObject)->GetInterface(bufferQueuePlayerObject, SL_IID_MUTESOLO, &bufferQueuePlayerMuteSolo);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
-#endif
+//#if 0
+//    result = (*bufferQueuePlayerObject)->GetInterface(bufferQueuePlayerObject, SL_IID_MUTESOLO, &bufferQueuePlayerMuteSolo);
+//    assert(SL_RESULT_SUCCESS == result);
+//    (void)result;
+//#endif
     /**
      * get volume interface  获取音量接口
      */

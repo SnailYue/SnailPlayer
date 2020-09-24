@@ -24,7 +24,7 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
             override fun onPrepared() {
                 Log.d(TAG, "onPrepared")
                 runOnUiThread {
-                    var viewWidth = sv_surface.width;
+                    var viewWidth = sv_surface.width
                     var videoWidth = snailPlayerNative.getVideoWidth()
                     var videoHeight = snailPlayerNative.getVideoHeight()
                     var lp = sv_surface.layoutParams
@@ -32,7 +32,8 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
                     /**
                      * 根据视频的宽高比，以布局的宽为参照，设置视频的高
                      */
-                    lp.height = videoHeight / videoWidth * viewWidth
+                    lp.height =
+                        (((videoHeight.toFloat()) / (videoWidth.toFloat())) * (viewWidth.toFloat())).toInt()
                     sv_surface.layoutParams = lp
                 }
                 snailPlayerNative.start()

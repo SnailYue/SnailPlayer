@@ -21,7 +21,7 @@ enum LogLevel {
 #define MY_LOG_LEVEL kVerbose
 #endif
 #ifndef MY_LOG_TAG
-#define MY_LOG_TAG "easy_player"
+#define MY_LOG_TAG "snail_player"
 #endif
 #ifndef FF_LOG_TAG
 #define FF_LOG_TAG "ffmpeg"

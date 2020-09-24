@@ -36,8 +36,8 @@ void PacketQueue::Get(AVPacket *packet) {
 }
 
 void PacketQueue::Clear() {
-    std::queue<AVPacket> empty;
-    swap(empty, queue);
+//    std::queue<AVPacket> empty;
+//    swap(empty, queue);
 }
 
 AVFrame *FrameQueue::Get() {
@@ -80,8 +80,8 @@ int SnailPlayer::SetDataSource(const std::string &p) {
         ELOG("illegal state|current:%d", state)
         return ERROR_ILLEGAL_STATE;
     }
-    ILOG("source path:%s", path.c_str())
     path = p;
+    ILOG("source path:%s", path.c_str())
     state = State::Initialized;
     return SUCCESS;
 }
@@ -130,13 +130,13 @@ void SnailPlayer::read() {
     err = avformat_open_input(&avFormatContext, path.c_str(), NULL, NULL);
     if (err) {
         av_strerror(err, err_buffer, sizeof(err_buffer));
-        ELOG("open input failed|ret:%d|msg:%s", err, err_buffer);
-        return;;
+        ELOG("open input failed|ret:%d|msg:%s", err, err_buffer)
+        return;
     }
     err = avformat_find_stream_info(avFormatContext, NULL);
     if (err < 0) {
         ELOG("Could not find stream info")
-        return;;
+        return;
     }
     for (int i = 0; i < avFormatContext->nb_streams; ++i) {
         if (avFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
@@ -145,7 +145,7 @@ void SnailPlayer::read() {
         }
         if (avFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
             video_stream_index = i;
-            ILOG("find video strean index %d", i);
+            ILOG("find video strean index %d", i)
         }
     }
     if (audio_stream_index >= 0) {
@@ -241,7 +241,7 @@ void SnailPlayer::openStream(int index) {
     AVCodec *avCodec;
     int ret = 0;
     if (index < 0 || index >= avFormatContext->nb_streams) {
-        return;;
+        return;
     }
     avCodecContext = avcodec_alloc_context3(NULL);
     if (!avCodecContext) {
@@ -251,8 +251,8 @@ void SnailPlayer::openStream(int index) {
     ret = avcodec_parameters_to_context(avCodecContext, avFormatContext->streams[index]->codecpar);
     if (ret < 0) {
         avcodec_free_context(&avCodecContext);
-        ELOG("avcodec_parameters_to_context error %d", ret);
-        return;;
+        ELOG("avcodec_parameters_to_context error %d", ret)
+        return;
     }
     av_codec_set_pkt_timebase(avCodecContext, avFormatContext->streams[index]->time_base);
     avCodec = avcodec_find_decoder(avCodecContext->codec_id);
@@ -297,6 +297,7 @@ void SnailPlayer::openStream(int index) {
             frame_rgba = av_frame_alloc();
             int numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGBA, avCodecContext->width,
                                                     avCodecContext->height, 1);
+            rgba_buffer = (uint8_t *) av_malloc(numBytes * sizeof(uint8_t));
             av_image_fill_arrays(frame_rgba->data, frame_rgba->linesize, rgba_buffer,
                                  AV_PIX_FMT_RGBA, avCodecContext->width, avCodecContext->height, 1);
             video_decode_thread.reset(new std::thread(&SnailPlayer::decodeVideo, this));
