@@ -39,6 +39,7 @@ void videoRender() {
         return;
     }
     while (true) {
+        ILOG("video render")
         //获取buffer绘制缓冲区
         if (ANativeWindow_lock(nativeWindow, &windowBuffer, nullptr) < 0) {
             ELOG("Could not lock window")
@@ -50,6 +51,7 @@ void videoRender() {
             //获取视频数据
             videoDataProvider->GetData(&buffer, &frame, width, height);
             if (buffer == nullptr) {
+                ELOG("buffer is null,native window is over")
                 break;
             }
             //数据位

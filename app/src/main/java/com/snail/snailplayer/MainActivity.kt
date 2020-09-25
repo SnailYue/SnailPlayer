@@ -39,6 +39,16 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
                 snailPlayerNative.start()
             }
         })
+
+        bt_state?.setOnClickListener {
+            if (bt_state.text == "暂停") {
+                bt_state.text = "继续"
+                snailPlayerNative.pause()
+            } else {
+                bt_state.text = "暂停"
+                snailPlayerNative.resume()
+            }
+        }
     }
 
 

@@ -14,7 +14,12 @@ inline char *GetAVErrorMsg(int code) {
     return err_msg;
 }
 
+/**
+ * 往包队列中添加数据
+ * @param packet
+ */
 void PacketQueue::Put(AVPacket *packet) {
+    ILOG("PacketQueue::Put")
     std::unique_lock<std::mutex> lock(mutex);
     full.wait(lock, [this] {
         return queue.size() <= maxSize;
@@ -23,7 +28,12 @@ void PacketQueue::Put(AVPacket *packet) {
     ready.notify_all();
 }
 
+/**
+ * 获取包队列中的数据
+ * @param packet
+ */
 void PacketQueue::Get(AVPacket *packet) {
+    ILOG("PacketQueue::Get")
     if (packet == nullptr)
         return;
     std::unique_lock<std::mutex> lock(mutex);
@@ -35,23 +45,39 @@ void PacketQueue::Get(AVPacket *packet) {
     full.notify_all();
 }
 
+/**
+ * 清空包队列
+ */
 void PacketQueue::Clear() {
-//    std::queue<AVPacket> empty;
-//    swap(empty, queue);
+    ILOG("PacketQueue::Clear")
+    std::queue<AVPacket> empty;
+    swap(empty, queue);
 }
 
+/**
+ * 获取帧队列中的数据
+ * @return
+ */
 AVFrame *FrameQueue::Get() {
+    ILOG("FrameQueue::Get")
     std::unique_lock<std::mutex> lock(mutex);
     cond.wait(lock, [this] {
+        ILOG("queue is empty ? %d", queue.empty() ? 1 : 0)
         return !queue.empty();
     });
     AVFrame *frame = queue.front();
     queue.pop();
+    cond.notify_all();
     return frame;
 }
 
+/**
+ * 往帧队列中添加数据
+ * @param frame
+ */
 void FrameQueue::Put(AVFrame *frame) {
-    std::lock_guard<std::mutex> lock(mutex);
+    ILOG("FrameQueue::Put")
+    std::unique_lock<std::mutex> lock(mutex);
     AVFrame *temp = av_frame_alloc();
     av_frame_move_ref(temp, frame);
     queue.push(temp);
@@ -75,7 +101,13 @@ SnailPlayer::~SnailPlayer() {
     }
 }
 
+/**
+ * 设置数据源
+ * @param p
+ * @return
+ */
 int SnailPlayer::SetDataSource(const std::string &p) {
+    ILOG("SnailPlayer::SetDataSource path = %s", p.c_str())
     if (state != State::Idle) {
         ELOG("illegal state|current:%d", state)
         return ERROR_ILLEGAL_STATE;
@@ -86,7 +118,12 @@ int SnailPlayer::SetDataSource(const std::string &p) {
     return SUCCESS;
 }
 
+/**
+ * 异步
+ * @return
+ */
 int SnailPlayer::PrepareAsync() {
+    ILOG("SnailPlayer::PrepareAsync")
     if (state != State::Initialized && state != State::Stoped) {
         ELOG("illegal state|current:%d", state);
         return ERROR_ILLEGAL_STATE;
@@ -96,12 +133,24 @@ int SnailPlayer::PrepareAsync() {
     return SUCCESS;
 }
 
+/**
+ * 回调事件
+ * @param cb
+ */
 void SnailPlayer::SetEventCallback(PlayerEventCallback *cb) {
+    ILOG("SnailPlayer::SetEventCallback")
     eventCallback = cb;
 }
 
+/**
+ * 获取音频数据
+ * @param buffer
+ * @param buffer_size
+ */
 void SnailPlayer::GetData(uint8_t **buffer, int &buffer_size) {
+    ILOG("SnailPlayer::GetData Audio")
     if (audio_buffer == nullptr) {
+        ELOG("audio buffer is null")
         return;
     }
     auto frame = audio_frame.Get();
@@ -117,6 +166,7 @@ void SnailPlayer::GetData(uint8_t **buffer, int &buffer_size) {
     }
     swr_convert(swr_context, &audio_buffer, frame->nb_samples,
                 (uint8_t const **) (frame->extended_data), frame->nb_samples);
+    //获取音频的时间基
     audio_clock = frame->pkt_dts * av_q2d(audio_stream->time_base);
     av_frame_unref(frame);
     av_frame_free(&frame);
@@ -124,7 +174,11 @@ void SnailPlayer::GetData(uint8_t **buffer, int &buffer_size) {
     buffer_size = next_size;
 }
 
+/**
+ * 打开数据源并读取相关的信息
+ */
 void SnailPlayer::read() {
+    ILOG("SnailPlayer::read")
     int err;
     char err_buffer[1024];
     err = avformat_open_input(&avFormatContext, path.c_str(), NULL, NULL);
@@ -156,18 +210,22 @@ void SnailPlayer::read() {
     }
     AVPacket *packet = (AVPacket *) av_malloc(sizeof(AVPacket));
     if (packet == NULL) {
-        ELOG("Could not allocate avPacket");
+        ELOG("Could not allocate avPacket")
         return;
     }
     while (true) {
         err = av_read_frame(avFormatContext, packet);
+        ILOG("av_read_frame")
         if (err < 0) {
             if ((err == AVERROR_EOF) || avio_feof(avFormatContext->pb)) {
                 eof = 1;
             }
             if (avFormatContext->pb && avFormatContext->pb->error) {
+                ELOG("av_read_frame error")
                 break;
             }
+            av_strerror(err, err_buffer, sizeof(err_buffer));
+            ELOG("av_read_frame error|ret:%d|msg:%s", err, err_buffer)
         }
         if (packet->stream_index == audio_stream_index) {
             audio_packet.Put(packet);
@@ -179,8 +237,11 @@ void SnailPlayer::read() {
     }
 }
 
+/**
+ * 音频解码
+ */
 void SnailPlayer::decodeAudio() {
-    ILOG("start decode audio")
+    ILOG("SnailPlayer::decodeAudio")
     AVPacket packet;
     AVFrame *frame = av_frame_alloc();
     while (true) {
@@ -199,6 +260,7 @@ void SnailPlayer::decodeAudio() {
             }
             break;
         }
+        ILOG("Put Audio Packet")
         audio_frame.Put(frame);
         if (audio_frame.Size() >= AUDIO_READY_SIZE && state == State::Preparing) {
             state = State::Prepared;
@@ -209,9 +271,11 @@ void SnailPlayer::decodeAudio() {
     }
 }
 
-
+/**
+ * 视频解码
+ */
 void SnailPlayer::decodeVideo() {
-    ILOG("start decode video")
+    ILOG("SnailPlayer::decodeVideo")
     AVPacket packet;
     AVFrame *frame = av_frame_alloc();
     while (true) {
@@ -219,7 +283,7 @@ void SnailPlayer::decodeVideo() {
         int ret;
         ret = avcodec_send_packet(video_codec_context, &packet);
         if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
-            ELOG("avcodec_send_packet error|code:%d|msg:%s", ret, GetAVErrorMsg(ret));
+            ELOG("avcodec_send_packet error|code:%d|msg:%s", ret, GetAVErrorMsg(ret))
             break;
         }
         ret = avcodec_receive_frame(video_codec_context, frame);
@@ -230,17 +294,22 @@ void SnailPlayer::decodeVideo() {
             }
             break;
         }
+        ILOG("Put Video Packet")
         video_frame.Put(frame);
     }
 }
 
-
+/**
+ * 打开流数据
+ * @param index
+ */
 void SnailPlayer::openStream(int index) {
-    ILOG("open stream|index:%d", index)
+    ILOG("SnailPlayer::openStream|index:%d", index)
     AVCodecContext *avCodecContext;
     AVCodec *avCodec;
     int ret = 0;
     if (index < 0 || index >= avFormatContext->nb_streams) {
+        ELOG("stream index is invalid")
         return;
     }
     avCodecContext = avcodec_alloc_context3(NULL);
@@ -305,7 +374,12 @@ void SnailPlayer::openStream(int index) {
     }
 }
 
+/**
+ * 开始
+ * @return
+ */
 int SnailPlayer::Start() {
+    ILOG("SnailPlayer::Start")
     if (state != State::Prepared) {
         ELOG("illagal state|current:%d", state);
         return ERROR_ILLEGAL_STATE;
@@ -316,9 +390,14 @@ int SnailPlayer::Start() {
     return SUCCESS;
 }
 
+/**
+ * 暂停
+ * @return
+ */
 int SnailPlayer::Pause() {
+    ILOG("SnailPlayer::Pause")
     if (state != State::Started) {
-        ELOG("illegal state|current:%d", state);
+        ELOG("illegal state|current:%d", state)
         return ERROR_ILLEGAL_STATE;
     }
     stopAudioPlay();
@@ -326,15 +405,43 @@ int SnailPlayer::Pause() {
     return SUCCESS;
 }
 
+
+/**
+ * 继续播放
+ * @return
+ */
+int SnailPlayer::Resume() {
+    ILOG("SnailPlayer::Resume")
+    if (state != State::Paused) {
+        ELOG("illegal state|current:%d", state)
+        return ERROR_ILLEGAL_STATE;
+    }
+    resumeAudioPlay();
+    state = State::Started;
+    return SUCCESS;
+}
+
+
+/**
+ * 获取视频数据
+ * @param buffer
+ * @param frame
+ * @param width
+ * @param height
+ */
 void SnailPlayer::GetData(uint8_t **buffer, AVFrame **frame, int &width, int &height) {
+    ILOG("SnailPlayer::GetData Video")
     auto v_frame = video_frame.Get();
     sws_scale(img_convert_context, (const uint8_t *const *) v_frame->data, v_frame->linesize, 0,
               video_codec_context->height, frame_rgba->data, frame_rgba->linesize);
     double timestamp =
             av_frame_get_best_effort_timestamp(v_frame) * av_q2d(video_stream->time_base);
+    //由于人对声音的变化比较敏感，所以以音频为基准，控制视频去同步音频
     if (timestamp > audio_clock) {
+        ILOG("sleep time = %f", timestamp - audio_clock)
         usleep((unsigned long) ((timestamp - audio_clock) * 1000000));
     }
+    ILOG("sleep is finish")
     *frame = frame_rgba;
     *buffer = rgba_buffer;
     width = video_codec_context->width;
@@ -344,14 +451,24 @@ void SnailPlayer::GetData(uint8_t **buffer, AVFrame **frame, int &width, int &he
     av_frame_free(&v_frame);
 }
 
+/**
+ * 获取视频的宽
+ * @return
+ */
 int SnailPlayer::GetVideoWidth() {
+    ILOG("SnailPlayer::GetVideoWidth")
     if (video_codec_context) {
         return video_codec_context->width;
     }
     return 0;
 }
 
+/**
+ * 获取视频的高
+ * @return
+ */
 int SnailPlayer::GetVideoHeight() {
+    ILOG("SnailPlayer::GetVideoHeight")
     if (video_codec_context) {
         return video_codec_context->height;
     }

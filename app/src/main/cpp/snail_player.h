@@ -11,7 +11,6 @@ extern "C" {
 #include <libavutil/imgutils.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-
 }
 
 #include <queue>
@@ -24,6 +23,9 @@ extern "C" {
 #define AUDIO_BUFFER_SIZE 8196
 #define AUDIO_READY_SIZE 8
 
+/**
+ * 播放状态
+ */
 enum class State {
     Idle,
     Initialized,
@@ -37,6 +39,9 @@ enum class State {
     Error,
 };
 
+/**
+ * 包队列
+ */
 class PacketQueue {
 public:
 
@@ -57,6 +62,9 @@ private:
     const size_t maxSize = 16;
 };
 
+/**
+ * 帧队列
+ */
 class FrameQueue {
 public:
     void Put(AVFrame *frame);
@@ -93,6 +101,8 @@ public:
 
     int Pause();
 
+    int Resume();
+
     virtual void GetData(uint8_t **buffer, int &buffer_size) override;
 
     virtual void GetData(uint8_t **buffer, AVFrame **frame, int &width, int &height) override;
@@ -114,29 +124,33 @@ private:
 
     PlayerEventCallback *eventCallback;
     State state;
+    //读取线程
     std::unique_ptr<std::thread> read_thread;
+    //音视频解码线程
     std::unique_ptr<std::thread> audio_decode_thread;
     std::unique_ptr<std::thread> video_decode_thread;
+    //音视频渲染线程
     std::unique_ptr<std::thread> audio_render_thread;
     std::unique_ptr<std::thread> video_render_thread;
-
+    //输出格式上下文
     AVFormatContext *avFormatContext;
     std::string path;
+    //包队列
     PacketQueue audio_packet;
     PacketQueue video_packet;
-
+    //帧队列
     FrameQueue audio_frame;
     FrameQueue video_frame;
-
+    //音视频流通道索引
     int video_stream_index;
     int audio_stream_index;
-
+    //音视频流
     AVStream *audio_stream;
     AVStream *video_stream;
 
     struct SwrContext *swr_context;
     struct SwsContext *img_convert_context;
-
+    //音视频编解码器上下文
     AVCodecContext *audio_codec_context;
     AVCodecContext *video_codec_context;
 

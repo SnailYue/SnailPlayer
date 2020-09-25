@@ -223,11 +223,11 @@ void createBufferQueueAudioPlayer(int sampleRate, int channel) {
         assert(SL_RESULT_SUCCESS == result);
         (void) result;
     }
-//#if 0
-//    result = (*bufferQueuePlayerObject)->GetInterface(bufferQueuePlayerObject, SL_IID_MUTESOLO, &bufferQueuePlayerMuteSolo);
-//    assert(SL_RESULT_SUCCESS == result);
-//    (void)result;
-//#endif
+#if 0
+    result = (*bufferQueuePlayerObject)->GetInterface(bufferQueuePlayerObject, SL_IID_MUTESOLO, &bufferQueuePlayerMuteSolo);
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+#endif
     /**
      * get volume interface  获取音量接口
      */
@@ -267,3 +267,12 @@ void stopAudioPlay() {
     assert(SL_RESULT_SUCCESS == result);
     (void) result;
 }
+
+void resumeAudioPlay() {
+    ILOG("resumeAudioPlay")
+    SLresult result = (*bufferQueuePlayerPlay)->SetPlayState(bufferQueuePlayerPlay,
+                                                             SL_PLAYSTATE_PLAYING);
+    assert(SL_RESULT_SUCCESS == result);
+    (void) result;
+}
+

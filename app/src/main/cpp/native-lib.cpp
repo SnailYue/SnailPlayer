@@ -63,6 +63,15 @@ Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1pause(JNIEnv *env,
 }
 
 /**
+ * 继续播放
+ */
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1resume(JNIEnv *env, jobject thiz) {
+    player->Resume();
+}
+
+/**
  * 设置surface
  */
 extern "C"

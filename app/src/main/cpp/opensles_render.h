@@ -33,5 +33,10 @@ void startAudioPlay();
  */
 void stopAudioPlay();
 
+/**
+ * 继续播放
+ */
+void resumeAudioPlay();
+
 
 #endif //SNAILPLAYER_OPENSLES_RENDER_H

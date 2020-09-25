@@ -14,7 +14,7 @@ void PlayerEventCallback::OnPrepared() {
     int getEnvStart = vm->GetEnv((void **) &env, JNI_VERSION_1_6);
     if (getEnvStart == JNI_EDETACHED) {
         if (vm->AttachCurrentThread(&env, nullptr) != 0) {
-            return;;
+            return;
         }
         need_detach = true;
     }

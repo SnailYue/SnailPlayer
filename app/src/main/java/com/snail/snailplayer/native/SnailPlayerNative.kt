@@ -25,6 +25,10 @@ class SnailPlayerNative {
         _native_start()
     }
 
+    fun resume() {
+
+    }
+
     fun pause() {
         _native_pause()
     }
@@ -65,6 +69,11 @@ class SnailPlayerNative {
      * 暂停
      */
     external fun _native_pause()
+
+    /**
+     * 继续播放
+     */
+    external fun _native_resume()
 
     /**
      * 设置surface
