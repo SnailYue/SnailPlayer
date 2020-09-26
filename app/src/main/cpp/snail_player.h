@@ -57,8 +57,8 @@ private:
     std::queue<AVPacket> queue;
     int64_t duration;
     std::mutex mutex;
-    std::condition_variable ready;
-    std::condition_variable full;
+    std::condition_variable getCond;
+    std::condition_variable putCond;
     const size_t maxSize = 16;
 };
 
@@ -77,9 +77,9 @@ public:
 private:
     std::queue<AVFrame *> queue;
     std::mutex mutex;
-    std::condition_variable cond;
+    std::condition_variable putCond;
+    std::condition_variable getCond;
     const size_t maxSize = 16;
-    const size_t readySize = 8;
 };
 
 

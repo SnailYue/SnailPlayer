@@ -21,11 +21,11 @@ inline char *GetAVErrorMsg(int code) {
 void PacketQueue::Put(AVPacket *packet) {
     ILOG("PacketQueue::Put")
     std::unique_lock<std::mutex> lock(mutex);
-    full.wait(lock, [this] {
+    putCond.wait(lock, [this] {
         return queue.size() <= maxSize;
     });
     queue.push(*packet);
-    ready.notify_all();
+    getCond.notify_all();
 }
 
 /**
@@ -34,15 +34,17 @@ void PacketQueue::Put(AVPacket *packet) {
  */
 void PacketQueue::Get(AVPacket *packet) {
     ILOG("PacketQueue::Get")
-    if (packet == nullptr)
+    if (packet == nullptr) {
+        ELOG("packet is null")
         return;
+    }
     std::unique_lock<std::mutex> lock(mutex);
-    ready.wait(lock, [this] {
+    getCond.wait(lock, [this] {
         return !queue.empty();
     });
     *packet = queue.front();
     queue.pop();
-    full.notify_all();
+    putCond.notify_all();
 }
 
 /**
@@ -61,13 +63,12 @@ void PacketQueue::Clear() {
 AVFrame *FrameQueue::Get() {
     ILOG("FrameQueue::Get")
     std::unique_lock<std::mutex> lock(mutex);
-    cond.wait(lock, [this] {
-        ILOG("queue is empty ? %d", queue.empty() ? 1 : 0)
+    getCond.wait(lock, [this] {
         return !queue.empty();
     });
     AVFrame *frame = queue.front();
     queue.pop();
-    cond.notify_all();
+    putCond.notify_all();
     return frame;
 }
 
@@ -78,10 +79,13 @@ AVFrame *FrameQueue::Get() {
 void FrameQueue::Put(AVFrame *frame) {
     ILOG("FrameQueue::Put")
     std::unique_lock<std::mutex> lock(mutex);
+    putCond.wait(lock, [this] {
+        return queue.size() <= maxSize;
+    });
     AVFrame *temp = av_frame_alloc();
     av_frame_move_ref(temp, frame);
     queue.push(temp);
-    cond.notify_all();
+    getCond.notify_all();
 }
 
 
@@ -217,24 +221,31 @@ void SnailPlayer::read() {
         err = av_read_frame(avFormatContext, packet);
         ILOG("av_read_frame")
         if (err < 0) {
+            ELOG("av_read_frame error|ret:%d|msg:%s", err, err_buffer)
             if ((err == AVERROR_EOF) || avio_feof(avFormatContext->pb)) {
+                ELOG("av_read_frame eof")
                 eof = 1;
+                break;
             }
             if (avFormatContext->pb && avFormatContext->pb->error) {
                 ELOG("av_read_frame error")
                 break;
             }
             av_strerror(err, err_buffer, sizeof(err_buffer));
-            ELOG("av_read_frame error|ret:%d|msg:%s", err, err_buffer)
         }
         if (packet->stream_index == audio_stream_index) {
             audio_packet.Put(packet);
+            ILOG("av_read_frame audio packet")
         } else if (packet->stream_index == video_stream_index) {
             video_packet.Put(packet);
+            ILOG("av_read_frame video packet")
         } else {
             av_packet_unref(packet);
+            ILOG("av_read_frame other packet")
         }
     }
+    av_packet_unref(packet);
+    av_free_packet(packet);
 }
 
 /**
@@ -269,6 +280,8 @@ void SnailPlayer::decodeAudio() {
             }
         }
     }
+    av_packet_unref(&packet);
+    av_free_packet(&packet);
 }
 
 /**
@@ -297,6 +310,8 @@ void SnailPlayer::decodeVideo() {
         ILOG("Put Video Packet")
         video_frame.Put(frame);
     }
+    av_packet_unref(&packet);
+    av_free_packet(&packet);
 }
 
 /**
