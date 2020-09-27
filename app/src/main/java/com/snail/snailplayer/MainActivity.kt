@@ -36,6 +36,9 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
                         (((videoHeight.toFloat()) / (videoWidth.toFloat())) * (viewWidth.toFloat())).toInt()
                     sv_surface.layoutParams = lp
                 }
+                //返回的时间为微秒
+                var duration = snailPlayerNative.getDuration()
+                Log.d(TAG, "total duration = " + duration / 1000000)
                 snailPlayerNative.start()
             }
         })

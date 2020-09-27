@@ -101,3 +101,9 @@ Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1getVideoWidth(JNIE
     return player->GetVideoWidth();
 }
 
+extern "C"
+JNIEXPORT jlong JNICALL
+Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1getDuration(JNIEnv *env,
+                                                                               jobject thiz) {
+    return player->Duration();
+}

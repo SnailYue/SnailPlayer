@@ -115,6 +115,9 @@ public:
 
     virtual int GetVideoHeight() override;
 
+    long Duration();
+
+
 private:
     void read();
 

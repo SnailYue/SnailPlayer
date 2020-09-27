@@ -45,6 +45,10 @@ class SnailPlayerNative {
         return _native_getVideoHeight()
     }
 
+    fun getDuration(): Long {
+        return _native_getDuration()
+    }
+
     /**
      * 设置回调
      */
@@ -89,4 +93,10 @@ class SnailPlayerNative {
      * 获取视频的高
      */
     external fun _native_getVideoHeight(): Int
+
+    /**
+     * 获取视频的时常
+     */
+    external fun _native_getDuration(): Long
+
 }

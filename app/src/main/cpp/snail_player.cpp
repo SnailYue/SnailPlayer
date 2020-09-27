@@ -502,3 +502,14 @@ int SnailPlayer::GetVideoHeight() {
     }
     return 0;
 }
+
+/**
+ * 获取视频的时常
+ * @return
+ */
+long SnailPlayer::Duration() {
+    if (avFormatContext) {
+        return avFormatContext->duration;
+    }
+    return 0;
+}
