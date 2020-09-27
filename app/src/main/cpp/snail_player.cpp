@@ -64,7 +64,7 @@ AVFrame *FrameQueue::Get() {
     ILOG("FrameQueue::Get")
     std::unique_lock<std::mutex> lock(mutex);
     getCond.wait(lock, [this] {
-        return !queue.empty();
+        return !queue.empty() && !isPause;
     });
     AVFrame *frame = queue.front();
     queue.pop();
@@ -80,7 +80,7 @@ void FrameQueue::Put(AVFrame *frame) {
     ILOG("FrameQueue::Put")
     std::unique_lock<std::mutex> lock(mutex);
     putCond.wait(lock, [this] {
-        return queue.size() <= maxSize;
+        return queue.size() <= maxSize && !isPause;
     });
     AVFrame *temp = av_frame_alloc();
     av_frame_move_ref(temp, frame);
@@ -88,6 +88,16 @@ void FrameQueue::Put(AVFrame *frame) {
     getCond.notify_all();
 }
 
+/**
+ * 通过对取队列中的线程做等待处理实现音视频的暂停
+ * @param s
+ */
+void FrameQueue::SetPlayState(bool s) {
+    isPause = s;
+    if (!isPause) {
+        getCond.notify_all();
+    }
+}
 
 SnailPlayer::SnailPlayer() : state(State::Idle), avFormatContext(nullptr), eof(0),
                              video_stream_index(-1), audio_stream_index(-1), eventCallback(nullptr),
@@ -415,7 +425,9 @@ int SnailPlayer::Pause() {
         ELOG("illegal state|current:%d", state)
         return ERROR_ILLEGAL_STATE;
     }
-    stopAudioPlay();
+//    stopAudioPlay();
+    video_frame.SetPlayState(true);
+    audio_frame.SetPlayState(true);
     state = State::Paused;
     return SUCCESS;
 }
@@ -431,7 +443,8 @@ int SnailPlayer::Resume() {
         ELOG("illegal state|current:%d", state)
         return ERROR_ILLEGAL_STATE;
     }
-    resumeAudioPlay();
+    video_frame.SetPlayState(false);
+    audio_frame.SetPlayState(false);
     state = State::Started;
     return SUCCESS;
 }

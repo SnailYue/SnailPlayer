@@ -26,7 +26,7 @@ class SnailPlayerNative {
     }
 
     fun resume() {
-
+        _native_resume()
     }
 
     fun pause() {

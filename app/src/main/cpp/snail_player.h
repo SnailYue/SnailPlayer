@@ -74,12 +74,16 @@ public:
     size_t Size() const {
         return queue.size();
     };
+
+    void SetPlayState(bool s);
+
 private:
     std::queue<AVFrame *> queue;
     std::mutex mutex;
     std::condition_variable putCond;
     std::condition_variable getCond;
     const size_t maxSize = 16;
+    bool isPause;
 };
 
 
