@@ -53,6 +53,8 @@ public:
 
     size_t Size();
 
+    void NotifyAll();
+
 private:
     std::queue<AVPacket> queue;
     int64_t duration;
@@ -60,6 +62,7 @@ private:
     std::condition_variable getCond;
     std::condition_variable putCond;
     const size_t maxSize = 16;
+    bool isClear = false;
 };
 
 /**
@@ -75,7 +78,11 @@ public:
         return queue.size();
     };
 
+    void Clear();
+
     void SetPlayState(bool s);
+
+    void NotifyAll();
 
 private:
     std::queue<AVFrame *> queue;
@@ -83,7 +90,8 @@ private:
     std::condition_variable putCond;
     std::condition_variable getCond;
     const size_t maxSize = 16;
-    bool isPause;
+    bool isPause = false;
+    bool isClear = false;
 };
 
 
@@ -116,6 +124,8 @@ public:
     virtual int GetVideoHeight() override;
 
     long Duration();
+
+    void SeekTo(int time);
 
 
 private:
@@ -166,6 +176,7 @@ private:
     AVFrame *frame_rgba;
     uint8_t *rgba_buffer;
     double audio_clock;
+    double current_time;
 };
 
 

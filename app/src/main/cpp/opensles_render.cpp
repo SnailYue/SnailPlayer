@@ -257,22 +257,3 @@ void startAudioPlay() {
     bufferQueuePlayerCallback(bufferQueuePlayerBufferQueue, NULL);
 }
 
-void stopAudioPlay() {
-    ILOG("stopAudioPlay")
-    /**
-     * set play state to paused  将播放状态改成暂停
-     */
-    SLresult result = (*bufferQueuePlayerPlay)->SetPlayState(bufferQueuePlayerPlay,
-                                                             SL_PLAYSTATE_PAUSED);
-    assert(SL_RESULT_SUCCESS == result);
-    (void) result;
-}
-
-void resumeAudioPlay() {
-    ILOG("resumeAudioPlay")
-    SLresult result = (*bufferQueuePlayerPlay)->SetPlayState(bufferQueuePlayerPlay,
-                                                             SL_PLAYSTATE_PLAYING);
-    assert(SL_RESULT_SUCCESS == result);
-    (void) result;
-}
-

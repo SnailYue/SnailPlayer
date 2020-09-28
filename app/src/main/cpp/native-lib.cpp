@@ -1,5 +1,6 @@
 #include <jni.h>
 #include "snail_player.h"
+#include "log_util.h"
 
 //
 // Created by surface on 9/21/2020.
@@ -104,6 +105,13 @@ Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1getVideoWidth(JNIE
 extern "C"
 JNIEXPORT jlong JNICALL
 Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1getDuration(JNIEnv *env,
-                                                                               jobject thiz) {
+                                                                          jobject thiz) {
     return player->Duration();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1seek_1to(JNIEnv *env, jobject thiz,
+                                                                       jint time) {
+    player->SeekTo(time);
 }

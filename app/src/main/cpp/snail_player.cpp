@@ -22,7 +22,7 @@ void PacketQueue::Put(AVPacket *packet) {
     ILOG("PacketQueue::Put")
     std::unique_lock<std::mutex> lock(mutex);
     putCond.wait(lock, [this] {
-        return queue.size() <= maxSize;
+        return queue.size() <= maxSize && !isClear;
     });
     queue.push(*packet);
     getCond.notify_all();
@@ -47,13 +47,21 @@ void PacketQueue::Get(AVPacket *packet) {
     putCond.notify_all();
 }
 
+void PacketQueue::NotifyAll() {
+    isClear = false;
+    putCond.notify_all();
+    getCond.notify_all();
+}
+
 /**
  * 清空包队列
  */
 void PacketQueue::Clear() {
     ILOG("PacketQueue::Clear")
     std::queue<AVPacket> empty;
+    isClear = true;
     swap(empty, queue);
+    ILOG("PacketQueue::queue size = %d", queue.size())
 }
 
 /**
@@ -80,12 +88,30 @@ void FrameQueue::Put(AVFrame *frame) {
     ILOG("FrameQueue::Put")
     std::unique_lock<std::mutex> lock(mutex);
     putCond.wait(lock, [this] {
-        return queue.size() <= maxSize && !isPause;
+        return queue.size() <= maxSize && !isClear;
     });
     AVFrame *temp = av_frame_alloc();
     av_frame_move_ref(temp, frame);
     queue.push(temp);
     getCond.notify_all();
+}
+
+/**
+ * 清空帧队列
+ */
+void FrameQueue::Clear() {
+    ILOG("FrameQueue::Clear")
+    std::queue<AVFrame *> empty;
+    isClear = true;
+    swap(empty, queue);
+
+    ILOG("FrameQueue::queue size = %d", queue.size())
+}
+
+void FrameQueue::NotifyAll() {
+    isClear = false;
+    getCond.notify_all();
+    putCond.notify_all();
 }
 
 /**
@@ -181,7 +207,7 @@ void SnailPlayer::GetData(uint8_t **buffer, int &buffer_size) {
     swr_convert(swr_context, &audio_buffer, frame->nb_samples,
                 (uint8_t const **) (frame->extended_data), frame->nb_samples);
     //获取音频的时间基
-    audio_clock = frame->pkt_dts * av_q2d(audio_stream->time_base);
+    audio_clock = frame->pkt_pts * av_q2d(audio_stream->time_base);
     av_frame_unref(frame);
     av_frame_free(&frame);
     *buffer = audio_buffer;
@@ -425,7 +451,6 @@ int SnailPlayer::Pause() {
         ELOG("illegal state|current:%d", state)
         return ERROR_ILLEGAL_STATE;
     }
-//    stopAudioPlay();
     video_frame.SetPlayState(true);
     audio_frame.SetPlayState(true);
     state = State::Paused;
@@ -465,7 +490,8 @@ void SnailPlayer::GetData(uint8_t **buffer, AVFrame **frame, int &width, int &he
     double timestamp =
             av_frame_get_best_effort_timestamp(v_frame) * av_q2d(video_stream->time_base);
     //由于人对声音的变化比较敏感，所以以音频为基准，控制视频去同步音频
-    if (timestamp > audio_clock) {
+    // 由于在快退的时候，可能回出现视频与音频帧不同步，出现timestamp - audio_clock的结果为几十秒甚至上百秒，导致界面画面卡死的问题，所以这里做了限定，两帧时间大于0.5秒时，不同步
+    if (timestamp > audio_clock && (timestamp - audio_clock < 0.5)) {
         ILOG("sleep time = %f", timestamp - audio_clock)
         usleep((unsigned long) ((timestamp - audio_clock) * 1000000));
     }
@@ -512,4 +538,36 @@ long SnailPlayer::Duration() {
         return avFormatContext->duration;
     }
     return 0;
+}
+
+/**
+ * 快进、快退
+ * @param time
+ */
+void SnailPlayer::SeekTo(int time) {
+    ILOG("SnailPlayer::SeekTo = %i", time)
+    if (avFormatContext) {
+        /**
+         * 清空队列中的帧数据
+         */
+        audio_packet.Clear();
+        video_packet.Clear();
+        audio_frame.Clear();
+        video_frame.Clear();
+        /**
+         * seek到指定位置
+         */
+        av_seek_frame(avFormatContext, -1, time * AV_TIME_BASE, AVSEEK_FLAG_BACKWARD);
+//        av_seek_frame(avFormatContext, audio_stream->index,
+//                      (int64_t) (time / av_q2d(audio_stream->time_base)), AVSEEK_FLAG_BACKWARD);
+//        av_seek_frame(avFormatContext, video_stream->index,
+//                      (int64_t) (time / av_q2d(video_stream->time_base)), AVSEEK_FLAG_BACKWARD);
+        /**
+         * 唤醒线程
+         */
+        audio_packet.NotifyAll();
+        video_packet.NotifyAll();
+        audio_frame.NotifyAll();
+        video_frame.NotifyAll();
+    }
 }

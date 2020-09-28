@@ -28,15 +28,4 @@ void initAudioPlayer(int sampleRate, int channel, AudioDataProvider *p);
  */
 void startAudioPlay();
 
-/**
- * 停止播放
- */
-void stopAudioPlay();
-
-/**
- * 继续播放
- */
-void resumeAudioPlay();
-
-
 #endif //SNAILPLAYER_OPENSLES_RENDER_H

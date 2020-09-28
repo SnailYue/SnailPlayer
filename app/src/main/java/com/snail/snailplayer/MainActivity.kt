@@ -3,6 +3,7 @@ package com.snail.snailplayer
 import android.os.Environment
 import android.util.Log
 import android.view.SurfaceHolder
+import android.widget.SeekBar
 import com.snail.snailplayer.base.BaseActivity
 import com.snail.snailplayer.base.SnailPlayerEventCallback
 import com.snail.snailplayer.native.SnailPlayerNative
@@ -15,6 +16,7 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
 
     var pathUrl = Environment.getExternalStorageDirectory().path + "/langzhongzhilian.mp4"
     var snailPlayerNative = SnailPlayerNative()
+    var seekProgress = 0
 
     override fun initView() {
         snailPlayerNative.setDataSource(pathUrl)
@@ -38,7 +40,7 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
                 }
                 //返回的时间为微秒
                 var duration = snailPlayerNative.getDuration()
-                Log.d(TAG, "total duration = " + duration / 1000000)
+                setProgressBar((duration / 1000000).toInt())
                 snailPlayerNative.start()
             }
         })
@@ -52,6 +54,28 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
                 snailPlayerNative.resume()
             }
         }
+    }
+
+
+    private fun setProgressBar(totalTime: Int) {
+        sb_bar?.max = totalTime
+
+        sb_bar?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                Log.d(TAG, "current seek = " + progress)
+                seekProgress = progress
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                snailPlayerNative.seekTo(seekProgress)
+            }
+
+        })
     }
 
 

@@ -1,9 +1,11 @@
 package com.snail.snailplayer.native
 
+import android.util.Log
 import android.view.Surface
 import com.snail.snailplayer.base.SnailPlayerEventCallback
 
 class SnailPlayerNative {
+    var TAG = SnailPlayerNative::class.java.simpleName
 
     init {
         System.loadLibrary("native-lib")
@@ -47,6 +49,11 @@ class SnailPlayerNative {
 
     fun getDuration(): Long {
         return _native_getDuration()
+    }
+
+    fun seekTo(time: Int) {
+        Log.d(TAG,"seekTo = " + time)
+        _native_seek_to(time)
     }
 
     /**
@@ -98,5 +105,10 @@ class SnailPlayerNative {
      * 获取视频的时常
      */
     external fun _native_getDuration(): Long
+
+    /**
+     * 快进、快退
+     */
+    external fun _native_seek_to(time: Int)
 
 }
