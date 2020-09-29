@@ -128,6 +128,7 @@ void FrameQueue::SetPlayState(bool s) {
 SnailPlayer::SnailPlayer() : state(State::Idle), avFormatContext(nullptr), eof(0),
                              video_stream_index(-1), audio_stream_index(-1), eventCallback(nullptr),
                              audio_clock(0) {
+    ChangeState(State::Idle);
     av_log_set_callback(ff_log_callback);
     av_log_set_level(AV_LOG_DEBUG);
     av_register_all();
@@ -138,6 +139,46 @@ SnailPlayer::~SnailPlayer() {
     if (avFormatContext) {
         avformat_free_context(avFormatContext);
         avFormatContext = nullptr;
+    }
+}
+
+void SnailPlayer::ChangeState(State s) {
+    int code = 0;
+    state = s;
+    if (timeCallback) {
+        switch (state) {
+            case State::Idle :
+                code = 0;
+                break;
+            case State::Initialized :
+                code = 1;
+                break;
+            case State::Preparing :
+                code = 2;
+                break;
+            case State::Prepared :
+                code = 3;
+                break;
+            case State::Started :
+                code = 4;
+                break;
+            case State::Paused :
+                code = 5;
+                break;
+            case State::Stoped :
+                code = 6;
+                break;
+            case State::Completed :
+                code = 7;
+                break;
+            case State::End :
+                code = 8;
+                break;
+            case State::Error :
+                code = -1;
+                break;
+        }
+//        timeCallback->PlayStateListener(code);
     }
 }
 
@@ -154,7 +195,7 @@ int SnailPlayer::SetDataSource(const std::string &p) {
     }
     path = p;
     ILOG("source path:%s", path.c_str())
-    state = State::Initialized;
+    ChangeState(State::Initialized);
     return SUCCESS;
 }
 
@@ -168,7 +209,7 @@ int SnailPlayer::PrepareAsync() {
         ELOG("illegal state|current:%d", state);
         return ERROR_ILLEGAL_STATE;
     }
-    state = State::Preparing;
+    ChangeState(State::Preparing);
     read_thread.reset(new std::thread(&SnailPlayer::read, this));
     return SUCCESS;
 }
@@ -325,7 +366,7 @@ void SnailPlayer::decodeAudio() {
         ILOG("Put Audio Packet")
         audio_frame.Put(frame);
         if (audio_frame.Size() >= AUDIO_READY_SIZE && state == State::Preparing) {
-            state = State::Prepared;
+            ChangeState(State::Prepared);
             if (eventCallback) {
                 eventCallback->OnPrepared();
             }
@@ -452,7 +493,7 @@ int SnailPlayer::Start() {
     }
     audio_render_thread.reset(new std::thread(startAudioPlay));
     video_render_thread.reset(new std::thread(videoRender));
-    state = State::Started;
+    ChangeState(State::Started);
     return SUCCESS;
 }
 
@@ -468,7 +509,7 @@ int SnailPlayer::Pause() {
     }
     video_frame.SetPlayState(true);
     audio_frame.SetPlayState(true);
-    state = State::Paused;
+    ChangeState(State::Paused);
     return SUCCESS;
 }
 
@@ -485,7 +526,7 @@ int SnailPlayer::Resume() {
     }
     video_frame.SetPlayState(false);
     audio_frame.SetPlayState(false);
-    state = State::Started;
+    ChangeState(State::Started);
     return SUCCESS;
 }
 

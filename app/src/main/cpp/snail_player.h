@@ -104,6 +104,8 @@ public:
 
     ~SnailPlayer();
 
+    void ChangeState(State s);
+
     int SetDataSource(const std::string &p);
 
     int PrepareAsync();

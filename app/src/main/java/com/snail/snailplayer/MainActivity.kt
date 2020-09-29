@@ -61,7 +61,7 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
             }
 
             override fun playState(state: Int) {
-
+                Log.d(TAG, "state code = " + state)
             }
         })
         sb_bar?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
