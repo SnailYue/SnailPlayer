@@ -217,8 +217,8 @@ void SnailPlayer::GetData(uint8_t **buffer, int &buffer_size) {
                 (uint8_t const **) (frame->extended_data), frame->nb_samples);
     //获取音频的时间基
     audio_clock = frame->pkt_pts * av_q2d(audio_stream->time_base);
-    //音频播放时间
-    if (audio_clock - current_time >= 0.1) {
+    //音频播放时间,在快退的时候，回出现 audio_clock < current_time的情况，所以需要对此状况做特殊处理
+    if (audio_clock - current_time >= 0.1 || audio_clock - current_time < 0) {
         current_time = audio_clock;
         timeCallback->PlayTimeListener(current_time, avFormatContext->duration / 1000000);
         ILOG("current time = %f", current_time)

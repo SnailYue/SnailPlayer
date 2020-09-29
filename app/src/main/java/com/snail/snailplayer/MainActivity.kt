@@ -18,6 +18,7 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
     var pathUrl = Environment.getExternalStorageDirectory().path + "/langzhongzhilian.mp4"
     var snailPlayerNative = SnailPlayerNative()
     var seekProgress = 0
+    var isTouch = false
 
     override fun initView() {
         snailPlayerNative.setDataSource(pathUrl)
@@ -55,38 +56,33 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
         snailPlayerNative.setPlayTimeListener(object : SnailPlayerTimeListener {
 
             override fun playTime(current: Double, total: Double) {
-                if (currentTime != current.toInt()) {
-                    currentTime = current.toInt()
-                    totalTime = total.toInt()
-                    setProgressBar(currentTime, totalTime)
-                    Log.d(TAG, "currentTime = " + current.toInt() + " ,total = " + total.toInt())
-                }
+                setProgressBar(current.toInt(), total.toInt())
+                Log.d(TAG, "currentTime = " + current.toInt() + " ,total = " + total.toInt())
             }
 
             override fun playState(state: Int) {
 
             }
         })
-        sb_bar?.max = 279
         sb_bar?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (isTouch) {
+                    snailPlayerNative.seekTo(seekProgress)
+                }
                 seekProgress = progress
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
-
+                isTouch = true
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                snailPlayerNative.seekTo(seekProgress)
+                isTouch = false
             }
 
         })
     }
-
-    var currentTime = 0
-    var totalTime = 0
 
     private fun setProgressBar(current: Int, totalTime: Int) {
         sb_bar?.max = totalTime
