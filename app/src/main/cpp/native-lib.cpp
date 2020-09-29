@@ -24,6 +24,15 @@ Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1setEventCallback(J
     player->SetEventCallback(eventCallback);
 }
 
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1setPlayerTimeListener(JNIEnv *env,
+                                                                                    jobject thiz,
+                                                                                    jobject listener) {
+    //
+}
+
 /**
  * 设置数据源
  */

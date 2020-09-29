@@ -41,6 +41,20 @@ const SLEnvironmentalReverbSettings reverbSettings = SL_I3DL2_ENVIRONMENT_PRESET
 
 AudioDataProvider *audioDataProvider;
 
+
+/**
+ * 计算音频的时间
+ * @param size
+ */
+void setCurrentTime(int size) {
+    audioDataProvider->clock += ((double) size) / (audioDataProvider->SampleRate() * 2 * 2);
+    if (audioDataProvider->clock - audioDataProvider->lastTime > 0.1) {
+        audioDataProvider->lastTime = audioDataProvider->clock;
+//        ILOG("audio current time = %d", (int) audioDataProvider->lastTime)
+    }
+}
+
+
 void bufferQueuePlayerCallback(SLAndroidSimpleBufferQueueItf bufferQueue, void *context) {
     ILOG("bufferQueuePlayerCallback")
     assert(bufferQueue == bufferQueuePlayerBufferQueue);
@@ -48,6 +62,7 @@ void bufferQueuePlayerCallback(SLAndroidSimpleBufferQueueItf bufferQueue, void *
         uint8_t *buffer;
         int size;
         audioDataProvider->GetData(&buffer, size);
+//        setCurrentTime(size);
         if (NULL != buffer && 0 != size) {
             SLresult result;
             /**

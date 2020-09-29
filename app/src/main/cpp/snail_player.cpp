@@ -208,6 +208,11 @@ void SnailPlayer::GetData(uint8_t **buffer, int &buffer_size) {
                 (uint8_t const **) (frame->extended_data), frame->nb_samples);
     //获取音频的时间基
     audio_clock = frame->pkt_pts * av_q2d(audio_stream->time_base);
+    //音频播放时间
+    if (audio_clock - current_time >= 0.1) {
+        current_time = audio_clock;
+        ILOG("current time = %f", current_time)
+    }
     av_frame_unref(frame);
     av_frame_free(&frame);
     *buffer = audio_buffer;
@@ -527,6 +532,10 @@ int SnailPlayer::GetVideoHeight() {
         return video_codec_context->height;
     }
     return 0;
+}
+
+int SnailPlayer::SampleRate() {
+    return audio_codec_context->sample_rate;
 }
 
 /**

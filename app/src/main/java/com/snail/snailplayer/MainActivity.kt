@@ -6,6 +6,7 @@ import android.view.SurfaceHolder
 import android.widget.SeekBar
 import com.snail.snailplayer.base.BaseActivity
 import com.snail.snailplayer.base.SnailPlayerEventCallback
+import com.snail.snailplayer.base.SnailPlayerTimeListener
 import com.snail.snailplayer.native.SnailPlayerNative
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -54,6 +55,15 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
                 snailPlayerNative.resume()
             }
         }
+        snailPlayerNative.setPlayTimeListener(object : SnailPlayerTimeListener {
+            override fun playTime(current: Double, total: Double) {
+                snailPlayerNative.seekTo(current.toInt())
+            }
+
+            override fun playState(state: Int) {
+
+            }
+        })
     }
 
 

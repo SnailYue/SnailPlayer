@@ -123,6 +123,8 @@ public:
 
     virtual int GetVideoHeight() override;
 
+    virtual int SampleRate() override;
+
     long Duration();
 
     void SeekTo(int time);
@@ -176,6 +178,7 @@ private:
     AVFrame *frame_rgba;
     uint8_t *rgba_buffer;
     double audio_clock;
+    //当前播放的进度
     double current_time;
 };
 

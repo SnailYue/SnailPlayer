@@ -13,6 +13,12 @@ public:
     virtual void GetData(uint8_t **buffer, int &buffer_size) = 0;
 
     virtual ~AudioDataProvider() = default;
+
+    virtual int SampleRate() = 0;
+
+public:
+    double clock = 0;
+    double lastTime = 0;
 };
 
 /**

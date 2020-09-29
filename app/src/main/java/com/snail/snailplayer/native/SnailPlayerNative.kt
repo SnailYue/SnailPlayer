@@ -3,6 +3,7 @@ package com.snail.snailplayer.native
 import android.util.Log
 import android.view.Surface
 import com.snail.snailplayer.base.SnailPlayerEventCallback
+import com.snail.snailplayer.base.SnailPlayerTimeListener
 
 class SnailPlayerNative {
     var TAG = SnailPlayerNative::class.java.simpleName
@@ -13,6 +14,10 @@ class SnailPlayerNative {
 
     fun setEventCallback(callback: SnailPlayerEventCallback) {
         _native_setEventCallback(callback)
+    }
+
+    fun setPlayTimeListener(listener: SnailPlayerTimeListener) {
+        _native_setPlayerTimeListener(listener)
     }
 
     fun setDataSource(url: String) {
@@ -52,7 +57,7 @@ class SnailPlayerNative {
     }
 
     fun seekTo(time: Int) {
-        Log.d(TAG,"seekTo = " + time)
+        Log.d(TAG, "seekTo = " + time)
         _native_seek_to(time)
     }
 
@@ -60,6 +65,12 @@ class SnailPlayerNative {
      * 设置回调
      */
     external fun _native_setEventCallback(callback: SnailPlayerEventCallback)
+
+
+    /**
+     * 播放时间监听
+     */
+    external fun _native_setPlayerTimeListener(listener: SnailPlayerTimeListener)
 
     /**
      * 设置数据源
