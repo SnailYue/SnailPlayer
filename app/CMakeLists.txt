@@ -69,6 +69,7 @@ add_library(native-lib SHARED
         ${CMAKE_SOURCE_DIR}/src/main/cpp/opensles_render.cpp
         ${CMAKE_SOURCE_DIR}/src/main/cpp/event_callback.cpp
         ${CMAKE_SOURCE_DIR}/src/main/cpp/snail_player.cpp
+        ${CMAKE_SOURCE_DIR}/src/main/cpp/time_callback.cpp
         )
 
 target_link_libraries(native-lib

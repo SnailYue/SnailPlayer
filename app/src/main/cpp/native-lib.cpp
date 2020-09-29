@@ -8,6 +8,7 @@
 
 SnailPlayer *player = new SnailPlayer();
 PlayerEventCallback *eventCallback;
+PlayerTimeCallback *timeCallback;
 
 /**
  * 设置回调
@@ -30,7 +31,11 @@ JNIEXPORT void JNICALL
 Java_com_snail_snailplayer_native_SnailPlayerNative__1native_1setPlayerTimeListener(JNIEnv *env,
                                                                                     jobject thiz,
                                                                                     jobject listener) {
-    //
+    if (timeCallback) {
+        delete timeCallback;
+    }
+    timeCallback = new PlayerTimeCallback(env, listener);
+    player->SetTimeCallback(timeCallback);
 }
 
 /**

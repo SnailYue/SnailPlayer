@@ -39,9 +39,6 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
                         (((videoHeight.toFloat()) / (videoWidth.toFloat())) * (viewWidth.toFloat())).toInt()
                     sv_surface.layoutParams = lp
                 }
-                //返回的时间为微秒
-                var duration = snailPlayerNative.getDuration()
-                setProgressBar((duration / 1000000).toInt())
                 snailPlayerNative.start()
             }
         })
@@ -56,24 +53,24 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
             }
         }
         snailPlayerNative.setPlayTimeListener(object : SnailPlayerTimeListener {
+
             override fun playTime(current: Double, total: Double) {
-                snailPlayerNative.seekTo(current.toInt())
+                if (currentTime != current.toInt()) {
+                    currentTime = current.toInt()
+                    totalTime = total.toInt()
+                    setProgressBar(currentTime, totalTime)
+                    Log.d(TAG, "currentTime = " + current.toInt() + " ,total = " + total.toInt())
+                }
             }
 
             override fun playState(state: Int) {
 
             }
         })
-    }
-
-
-    private fun setProgressBar(totalTime: Int) {
-        sb_bar?.max = totalTime
-
+        sb_bar?.max = 279
         sb_bar?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                Log.d(TAG, "current seek = " + progress)
                 seekProgress = progress
             }
 
@@ -86,6 +83,14 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
             }
 
         })
+    }
+
+    var currentTime = 0
+    var totalTime = 0
+
+    private fun setProgressBar(current: Int, totalTime: Int) {
+        sb_bar?.max = totalTime
+        sb_bar?.setProgress(current)
     }
 
 

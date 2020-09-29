@@ -18,6 +18,7 @@ extern "C" {
 #include "opensles_render.h"
 #include "native_window_render.h"
 #include "event_callback.h"
+#include "time_callback.h"
 #include <thread>
 
 #define AUDIO_BUFFER_SIZE 8196
@@ -109,6 +110,8 @@ public:
 
     void SetEventCallback(PlayerEventCallback *cb);
 
+    void SetTimeCallback(PlayerTimeCallback *cb);
+
     int Start();
 
     int Pause();
@@ -142,6 +145,7 @@ private:
 private:
 
     PlayerEventCallback *eventCallback;
+    PlayerTimeCallback *timeCallback;
     State state;
     //读取线程
     std::unique_ptr<std::thread> read_thread;

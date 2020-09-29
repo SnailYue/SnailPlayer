@@ -183,6 +183,15 @@ void SnailPlayer::SetEventCallback(PlayerEventCallback *cb) {
 }
 
 /**
+ * 时间回调
+ * @param cb
+ */
+void SnailPlayer::SetTimeCallback(PlayerTimeCallback *cb) {
+    ILOG("SnailPlayer::SetTimeCallback")
+    timeCallback = cb;
+}
+
+/**
  * 获取音频数据
  * @param buffer
  * @param buffer_size
@@ -211,6 +220,7 @@ void SnailPlayer::GetData(uint8_t **buffer, int &buffer_size) {
     //音频播放时间
     if (audio_clock - current_time >= 0.1) {
         current_time = audio_clock;
+        timeCallback->PlayTimeListener(current_time, avFormatContext->duration / 1000000);
         ILOG("current time = %f", current_time)
     }
     av_frame_unref(frame);
