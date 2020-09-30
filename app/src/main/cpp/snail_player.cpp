@@ -142,6 +142,10 @@ SnailPlayer::~SnailPlayer() {
     }
 }
 
+/**
+ * 记录当前的播放状态
+ * @param s
+ */
 void SnailPlayer::ChangeState(State s) {
     int code = 0;
     state = s;
@@ -178,7 +182,7 @@ void SnailPlayer::ChangeState(State s) {
                 code = -1;
                 break;
         }
-//        timeCallback->PlayStateListener(code);
+        timeCallback->PlayStateListener(code);
     }
 }
 
@@ -316,10 +320,12 @@ void SnailPlayer::read() {
             ELOG("av_read_frame error|ret:%d|msg:%s", err, err_buffer)
             if ((err == AVERROR_EOF) || avio_feof(avFormatContext->pb)) {
                 ELOG("av_read_frame eof")
+                ChangeState(State::Completed);
                 eof = 1;
                 break;
             }
             if (avFormatContext->pb && avFormatContext->pb->error) {
+                ChangeState(State::Error);
                 ELOG("av_read_frame error")
                 break;
             }
@@ -615,7 +621,7 @@ void SnailPlayer::SeekTo(int time) {
         audio_frame.Clear();
         video_frame.Clear();
         /**
-         * seek到指定位置
+         * seek到指定位置,实现有两种方式，1，不指定特定的流，2.指定特定的流
          */
         av_seek_frame(avFormatContext, -1, time * AV_TIME_BASE, AVSEEK_FLAG_BACKWARD);
 //        av_seek_frame(avFormatContext, audio_stream->index,
