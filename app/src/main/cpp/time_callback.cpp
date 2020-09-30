@@ -27,7 +27,7 @@ void PlayerTimeCallback::PlayTimeListener(double time, double total) {
         ELOG("Unable to find method")
         return;
     }
-    env->CallVoidMethod(cb, javaCallbackId,time,total);
+    env->CallVoidMethod(cb, javaCallbackId, time, total);
     if (need_detach) {
         vm->DetachCurrentThread();
     }

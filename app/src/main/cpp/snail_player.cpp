@@ -149,39 +149,39 @@ SnailPlayer::~SnailPlayer() {
 void SnailPlayer::ChangeState(State s) {
     int code = 0;
     state = s;
-    if (timeCallback) {
-        switch (state) {
-            case State::Idle :
-                code = 0;
-                break;
-            case State::Initialized :
-                code = 1;
-                break;
-            case State::Preparing :
-                code = 2;
-                break;
-            case State::Prepared :
-                code = 3;
-                break;
-            case State::Started :
-                code = 4;
-                break;
-            case State::Paused :
-                code = 5;
-                break;
-            case State::Stoped :
-                code = 6;
-                break;
-            case State::Completed :
-                code = 7;
-                break;
-            case State::End :
-                code = 8;
-                break;
-            case State::Error :
-                code = -1;
-                break;
-        }
+    switch (state) {
+        case State::Idle :
+            code = 0;
+            break;
+        case State::Initialized :
+            code = 1;
+            break;
+        case State::Preparing :
+            code = 2;
+            break;
+        case State::Prepared :
+            code = 3;
+            break;
+        case State::Started :
+            code = 4;
+            break;
+        case State::Paused :
+            code = 5;
+            break;
+        case State::Stoped :
+            code = 6;
+            break;
+        case State::Completed :
+            code = 7;
+            break;
+        case State::End :
+            code = 8;
+            break;
+        case State::Error :
+            code = -1;
+            break;
+    }
+    if (0 != timeCallback) {
         timeCallback->PlayStateListener(code);
     }
 }
@@ -262,11 +262,8 @@ void SnailPlayer::GetData(uint8_t **buffer, int &buffer_size) {
                 (uint8_t const **) (frame->extended_data), frame->nb_samples);
     //获取音频的时间基
     audio_clock = frame->pkt_pts * av_q2d(audio_stream->time_base);
-    //音频播放时间,在快退的时候，回出现 audio_clock < current_time的情况，所以需要对此状况做特殊处理
-    if (audio_clock - current_time >= 0.1 || audio_clock - current_time < 0) {
-        current_time = audio_clock;
-        timeCallback->PlayTimeListener(current_time, avFormatContext->duration / 1000000);
-        ILOG("current time = %f", current_time)
+    if (0 != timeCallback) {
+        timeCallback->PlayTimeListener(audio_clock, avFormatContext->duration / 1000000);
     }
     av_frame_unref(frame);
     av_frame_free(&frame);
@@ -373,7 +370,7 @@ void SnailPlayer::decodeAudio() {
         audio_frame.Put(frame);
         if (audio_frame.Size() >= AUDIO_READY_SIZE && state == State::Preparing) {
             ChangeState(State::Prepared);
-            if (eventCallback) {
+            if (0 != eventCallback) {
                 eventCallback->OnPrepared();
             }
         }
