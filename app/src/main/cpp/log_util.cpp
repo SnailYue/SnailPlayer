@@ -7,8 +7,10 @@
 #include <sstream>
 
 extern "C" {
+
 #include "libavutil/log.h"
-};
+
+}
 
 void ff_log_callback(void *ptr, int level, const char *fmt, va_list vl) {
     switch (level) {

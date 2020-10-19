@@ -548,7 +548,7 @@ void SnailPlayer::GetData(uint8_t **buffer, AVFrame **frame, int &width, int &he
               video_codec_context->height, frame_rgba->data, frame_rgba->linesize);
     double timestamp =
             av_frame_get_best_effort_timestamp(v_frame) * av_q2d(video_stream->time_base);
-    //由于人对声音的变化比较敏感，所以以音频为基准，控制视频去同步音频
+    // 由于人对声音的变化比较敏感，所以以音频为基准，控制视频去同步音频
     // 由于在快退的时候，可能回出现视频与音频帧不同步，出现timestamp - audio_clock的结果为几十秒甚至上百秒，导致界面画面卡死的问题，所以这里做了限定，两帧时间大于0.5秒时，不同步
     if (timestamp > audio_clock && (timestamp - audio_clock < 0.5)) {
         ILOG("sleep time = %f", timestamp - audio_clock)

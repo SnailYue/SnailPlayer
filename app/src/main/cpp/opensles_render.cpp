@@ -50,7 +50,6 @@ void setCurrentTime(int size) {
     audioDataProvider->clock += ((double) size) / (audioDataProvider->SampleRate() * 2 * 2);
     if (audioDataProvider->clock - audioDataProvider->lastTime > 0.1) {
         audioDataProvider->lastTime = audioDataProvider->clock;
-//        ILOG("audio current time = %d", (int) audioDataProvider->lastTime)
     }
 }
 
