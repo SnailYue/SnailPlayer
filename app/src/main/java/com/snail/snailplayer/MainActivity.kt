@@ -104,7 +104,7 @@ class MainActivity : BaseActivity(), SurfaceHolder.Callback {
 
     private fun setProgressBar(current: Int, totalTime: Int) {
         sb_bar?.max = totalTime
-        sb_bar?.setProgress(current)
+        sb_bar?.progress = current
     }
 
 

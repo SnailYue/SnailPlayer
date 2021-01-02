@@ -57,69 +57,69 @@ class SnailPlayerNative {
     }
 
     fun seekTo(time: Int) {
-        Log.d(TAG, "seekTo = " + time)
+        Log.d(TAG, "seekTo = $time")
         _native_seek_to(time)
     }
 
     /**
      * 设置回调
      */
-    external fun _native_setEventCallback(callback: SnailPlayerEventCallback)
+    private external fun _native_setEventCallback(callback: SnailPlayerEventCallback)
 
 
     /**
      * 播放时间监听
      */
-    external fun _native_setPlayerTimeListener(listener: SnailPlayerTimeListener)
+    private external fun _native_setPlayerTimeListener(listener: SnailPlayerTimeListener)
 
     /**
      * 设置数据源
      */
-    external fun _native_setDataSource(url: String)
+    private external fun _native_setDataSource(url: String)
 
     /**
      * 异步准备
      */
-    external fun _native_prepareAsync()
+    private external fun _native_prepareAsync()
 
     /**
      * 开始
      */
-    external fun _native_start()
+    private external fun _native_start()
 
     /**
      * 暂停
      */
-    external fun _native_pause()
+    private external fun _native_pause()
 
     /**
      * 继续播放
      */
-    external fun _native_resume()
+    private external fun _native_resume()
 
     /**
      * 设置surface
      */
-    external fun _native_setSurface(surface: Surface)
+    private external fun _native_setSurface(surface: Surface)
 
     /**
      * 获取视频的宽
      */
-    external fun _native_getVideoWidth(): Int
+    private external fun _native_getVideoWidth(): Int
 
     /**
      * 获取视频的高
      */
-    external fun _native_getVideoHeight(): Int
+    private external fun _native_getVideoHeight(): Int
 
     /**
      * 获取视频的时常
      */
-    external fun _native_getDuration(): Long
+    private external fun _native_getDuration(): Long
 
     /**
      * 快进、快退
      */
-    external fun _native_seek_to(time: Int)
+    private external fun _native_seek_to(time: Int)
 
 }
